@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 
 import com.example.data.local.StudyTask
 import com.example.data.local.StudyTaskRepository
+import com.example.data.model.InteractiveQuiz
+import com.example.data.model.QuizQuestion
 import org.json.JSONArray
 
 sealed interface UiState<out T> {
@@ -150,16 +152,118 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // State for Interactive Quiz
+    private val _interactiveQuizState = MutableStateFlow<UiState<InteractiveQuiz>>(UiState.Idle)
+    val interactiveQuizState: StateFlow<UiState<InteractiveQuiz>> = _interactiveQuizState.asStateFlow()
+
+    fun resetQuizState() {
+        _interactiveQuizState.value = UiState.Idle
+    }
+
+    fun loadPreDesignedQuiz(quiz: InteractiveQuiz) {
+        _interactiveQuizState.value = UiState.Success(quiz)
+    }
+
     fun generateQuiz(topic: String, subject: String) {
         if (topic.isBlank()) return
         viewModelScope.launch {
             _quizState.value = UiState.Loading
+            _interactiveQuizState.value = UiState.Loading
             val result = geminiRepository.generateQuiz(topic, subject)
             result.fold(
-                onSuccess = { _quizState.value = UiState.Success(it) },
-                onFailure = { _quizState.value = UiState.Error(it.localizedMessage ?: "حدث خطأ") }
+                onSuccess = { rawJson ->
+                    _quizState.value = UiState.Success(rawJson)
+                    val questions = parseQuizQuestionsFromJson(rawJson)
+                    if (questions.isNotEmpty()) {
+                        _interactiveQuizState.value = UiState.Success(
+                            InteractiveQuiz(
+                                title = topic,
+                                subject = subject,
+                                questions = questions
+                            )
+                        )
+                    } else {
+                        // Fallback fallback sample questions if parsing fails
+                        val fallback = createFallbackQuizQuestions(topic, subject)
+                        _interactiveQuizState.value = UiState.Success(fallback)
+                    }
+                },
+                onFailure = {
+                    _quizState.value = UiState.Error(it.localizedMessage ?: "حدث خطأ")
+                    _interactiveQuizState.value = UiState.Error(it.localizedMessage ?: "حدث خطأ")
+                }
             )
         }
+    }
+
+    private fun parseQuizQuestionsFromJson(jsonString: String): List<QuizQuestion> {
+        val list = mutableListOf<QuizQuestion>()
+        try {
+            val cleanJson = if (jsonString.contains("```json")) {
+                jsonString.substringAfter("```json").substringBefore("```").trim()
+            } else if (jsonString.contains("```")) {
+                jsonString.substringAfter("```").substringBefore("```").trim()
+            } else {
+                jsonString.trim()
+            }
+
+            val jsonArray = JSONArray(cleanJson)
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val question = obj.optString("question", "سؤال اختباري")
+                val optionsArray = obj.optJSONArray("options")
+                val options = mutableListOf<String>()
+                if (optionsArray != null) {
+                    for (j in 0 until optionsArray.length()) {
+                        options.add(optionsArray.getString(j))
+                    }
+                }
+                val correctAnswerIndex = obj.optInt("correctAnswerIndex", 0)
+                val explanation = obj.optString("explanation", "التفسير العلمي للإجابة الصحيحة وتوضيح الخطأ الشائع.")
+
+                if (question.isNotBlank() && options.size >= 2) {
+                    list.add(
+                        QuizQuestion(
+                            id = i + 1,
+                            question = question,
+                            options = options,
+                            correctAnswerIndex = correctAnswerIndex.coerceIn(0, options.size - 1),
+                            explanation = explanation
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return list
+    }
+
+    private fun createFallbackQuizQuestions(topic: String, subject: String): InteractiveQuiz {
+        val questions = listOf(
+            QuizQuestion(
+                id = 1,
+                question = "ما هو المفهوم الأساسي المتعلق بـ $topic؟",
+                options = listOf("التفاعل الفيزيائي المتوازن", "القوة المباشرة المطبقة", "التغير المباشر في النظام", "المبدأ الأساسي للقياس"),
+                correctAnswerIndex = 0,
+                explanation = "💡 التغذية الراجعة: يعبر المفهوم الأساسي عن الاتزان الفيزيائي أو العلمي. الخطأ الشائع هو خلط الطلاب بين القوة والمبدأ المباشر."
+            ),
+            QuizQuestion(
+                id = 2,
+                question = "أي من الآتي يعتبر تطبيقاً صحيحاً على دراسة $topic؟",
+                options = listOf("حساب السرعة والتسارع", "تحليل التغير الكيميائي", "تطبيق القوانين النظرية خطوة بخطوة", "ملاحظة الظاهرة دون قياس"),
+                correctAnswerIndex = 2,
+                explanation = "💡 التغذية الراجعة: تطبيق القوانين خطوة بخطوة هو الأساس المعتمد لحل المسائل وتقليل الأخطاء الحسابية."
+            ),
+            QuizQuestion(
+                id = 3,
+                question = "عند تطبيق معطيات $topic في الامتحان، ما أفضل خطوة لمنع الخطأ الشائع؟",
+                options = listOf("التسرع في كتابة الناتج النهائي", "استخراج المعطيات وتحديد القانون المستخدم أولاً", "تخمين الإجابة", "تجاهل الوحدات الفيزيائية/النحوية"),
+                correctAnswerIndex = 1,
+                explanation = "💡 التغذية الراجعة: كتابة المعطيات والقانون أولاً تضمن الحصول على الدرجات الجزئية وتمنع خلط القوانين."
+            )
+        )
+        return InteractiveQuiz(title = topic, subject = subject, questions = questions)
     }
 
     fun saveResultToLibrary(title: String, subject: String, itemType: String, inputContent: String, outputContent: String) {
