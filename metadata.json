@@ -1,0 +1,6 @@
+{
+  "name": "نبراس - للمرحلة المتوسطة",
+  "description": "تطبيق تعليمي ذكي للمرحلة الإعدادية والمتوسطة لبناء أساس علمي قوي، شرح المفاهيم، حل المسائل خطوة بخطوة، تلخيص الدروس، وتصحيح التعبير.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
