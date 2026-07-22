@@ -329,4 +329,48 @@ class GeminiRepository(private val apiService: GeminiApiService = RetrofitClient
             Result.failure(Exception("خطأ أثناء إنشاء الخطة الدراسية: ${e.localizedMessage}"))
         }
     }
+
+    suspend fun generateRealWorldApplication(
+        concept: String,
+        category: String // "علمي" أو "أدبي"
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val apiKey = getApiKey()
+            if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
+                return@withContext Result.failure(Exception("يرجى إدخال مفتاح GEMINI_API_KEY لاستخدام مولد الأمثلة الواقعية."))
+            }
+
+            val prompt = """
+            أنت معلم مبتكر ومستشار تعليمي لطلاب المرحلة المتوسطة والإعدادية (11-15 سنة).
+            قم بتقديم شرح تفاعلي ومثالي يربط المفهوم التالي ($concept) بتطبيق واقعي ملموس من الحياة اليومية لطلاب المدرسة.
+            نوع المفهوم: $category
+
+            نسق الإجابة بتصميم أنيق ومقسّم إلى النحو التالي:
+            1. 📌 **تعريف المفهوم بأسلوب مبسط جداً**:
+            [شرح المفهوم في سطرين فقط]
+
+            2. 🌍 **كيف نراه ونعيشه في حياتنا اليومية؟**:
+            [قصة قصيرة أو تطبيق ملموس من البيت، المدرسة، الشارع، التكنولوجيا، الإعلانات، أو الطبيعة]
+
+            3. ⚙️ **التفسير العلمي / البلاغي للتطبيق**:
+            [ربط المفهوم بالظاهرة الواقعية خطوة بخطوة]
+
+            4. 💡 **سؤال تفكير ناقد ذكي لترسيخ الفهم**:
+            [سؤال ممتع يربط المفهوم بموقف آخر في حياة الطالب]
+            """.trimIndent()
+
+            val request = GeminiRequest(
+                contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt)))),
+                systemInstruction = baseSystemInstruction
+            )
+
+            val response = apiService.generateContentFlash(apiKey, request)
+            val text = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+                ?: "عذراً، تعذر توليد التطبيق الواقعي."
+
+            Result.success(text)
+        } catch (e: Exception) {
+            Result.failure(Exception("خطأ أثناء توليد التطبيق الواقعي: ${e.localizedMessage}"))
+        }
+    }
 }

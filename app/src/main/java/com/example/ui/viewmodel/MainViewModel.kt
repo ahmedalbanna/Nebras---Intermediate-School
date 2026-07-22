@@ -479,4 +479,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    // State for Real World Application Generator
+    private val _realWorldAppState = MutableStateFlow<UiState<String>>(UiState.Idle)
+    val realWorldAppState: StateFlow<UiState<String>> = _realWorldAppState.asStateFlow()
+
+    fun generateRealWorldApplication(concept: String, category: String) {
+        if (concept.isBlank()) return
+        viewModelScope.launch {
+            _realWorldAppState.value = UiState.Loading
+            val result = geminiRepository.generateRealWorldApplication(concept, category)
+            result.fold(
+                onSuccess = { _realWorldAppState.value = UiState.Success(it) },
+                onFailure = { _realWorldAppState.value = UiState.Error(it.localizedMessage ?: "حدث خطأ أثناء التوليد") }
+            )
+        }
+    }
 }

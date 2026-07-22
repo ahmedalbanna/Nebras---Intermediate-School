@@ -41,6 +41,8 @@ import com.example.ui.screens.SavedLibraryScreen
 import com.example.ui.viewmodel.MainViewModel
 
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Science
+import com.example.ui.screens.InteractiveLabScreen
 import com.example.ui.screens.StudyPlanScreen
 
 sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
@@ -51,6 +53,7 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
     object Summarizer : Screen("summarizer", "الملخصات", Icons.Default.Book)
     object Essay : Screen("essay", "التعبير", Icons.Default.Create)
     object Quiz : Screen("quiz", "الاختبارات", Icons.Default.Quiz)
+    object InteractiveLab : Screen("interactive_lab", "المختبر", Icons.Default.Science)
     object Saved : Screen("saved", "المحفوظات", Icons.Default.Bookmark)
 }
 
@@ -135,6 +138,9 @@ fun AppNavigation(viewModel: MainViewModel) {
                     },
                     onNavigateToStudyPlan = {
                         navController.navigate(Screen.StudyPlan.route)
+                    },
+                    onNavigateToInteractiveLab = {
+                        navController.navigate(Screen.InteractiveLab.route)
                     }
                 )
             }
@@ -192,6 +198,13 @@ fun AppNavigation(viewModel: MainViewModel) {
 
             composable(Screen.Quiz.route) {
                 QuizGeneratorScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.InteractiveLab.route) {
+                InteractiveLabScreen(
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() }
                 )

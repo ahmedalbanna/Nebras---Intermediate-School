@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Science
 
 @Composable
 fun HomeScreen(
@@ -60,7 +61,8 @@ fun HomeScreen(
     onNavigateToEssayCorrector: () -> Unit,
     onNavigateToQuiz: () -> Unit,
     onNavigateToSaved: () -> Unit,
-    onNavigateToStudyPlan: () -> Unit
+    onNavigateToStudyPlan: () -> Unit,
+    onNavigateToInteractiveLab: () -> Unit
 ) {
     val subjects = listOf(
         "علوم عامة", "رياضيات", "فيزياء", "كيمياء", "أحياء", "لغة عربية", "دراسات اجتماعية", "لغة إنجليزية"
@@ -277,6 +279,19 @@ fun HomeScreen(
                     backgroundColor = MaterialTheme.colorScheme.surface,
                     iconTint = Color(0xFF8B5CF6),
                     onClick = onNavigateToQuiz
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Card 5.5: Interactive Lab & Media Hub
+                ToolCardItem(
+                    title = "المختبر والوسائط التفاعلية 🎥🔬",
+                    subtitle = "شروحات مرئية قصيرة، محاكي الرسوم البيانية لأوم ونيوتن، وتطبيقات واقعية",
+                    icon = Icons.Default.Science,
+                    badgeText = "محاكاة ورسومات",
+                    backgroundColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                    iconTint = MaterialTheme.colorScheme.secondary,
+                    onClick = onNavigateToInteractiveLab
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
