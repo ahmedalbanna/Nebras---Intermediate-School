@@ -50,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 
+import androidx.compose.material.icons.filled.DateRange
+
 @Composable
 fun HomeScreen(
     onNavigateToConcept: (subject: String) -> Unit,
@@ -57,7 +59,8 @@ fun HomeScreen(
     onNavigateToSummarizer: () -> Unit,
     onNavigateToEssayCorrector: () -> Unit,
     onNavigateToQuiz: () -> Unit,
-    onNavigateToSaved: () -> Unit
+    onNavigateToSaved: () -> Unit,
+    onNavigateToStudyPlan: () -> Unit
 ) {
     val subjects = listOf(
         "علوم عامة", "رياضيات", "فيزياء", "كيمياء", "أحياء", "لغة عربية", "دراسات اجتماعية", "لغة إنجليزية"
@@ -199,6 +202,19 @@ fun HomeScreen(
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
+
+                // Card 0: Study Plan Generator
+                ToolCardItem(
+                    title = "تخصيص الخطة والجدول الدراسي 🗓️",
+                    subtitle = "جدولة ذكية مخصصة حسب مستواك وسرعة تعلمك والمواد التي ترغب بتمكينها",
+                    icon = Icons.Default.DateRange,
+                    badgeText = "جدولك المخصص",
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                    iconTint = MaterialTheme.colorScheme.primary,
+                    onClick = onNavigateToStudyPlan
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Card 1: Concept Explainer
                 ToolCardItem(

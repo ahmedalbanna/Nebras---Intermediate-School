@@ -40,8 +40,12 @@ import com.example.ui.screens.QuizGeneratorScreen
 import com.example.ui.screens.SavedLibraryScreen
 import com.example.ui.viewmodel.MainViewModel
 
+import androidx.compose.material.icons.filled.DateRange
+import com.example.ui.screens.StudyPlanScreen
+
 sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Home : Screen("home", "الرئيسية", Icons.Default.Home)
+    object StudyPlan : Screen("study_plan", "الجدول", Icons.Default.DateRange)
     object Concept : Screen("concept", "المفاهيم", Icons.Default.Lightbulb)
     object MathSolver : Screen("math_solver", "المسائل", Icons.Default.Calculate)
     object Summarizer : Screen("summarizer", "الملخصات", Icons.Default.Book)
@@ -70,10 +74,10 @@ fun AppNavigation(viewModel: MainViewModel) {
 
     val bottomNavItems = listOf(
         Screen.Home,
+        Screen.StudyPlan,
         Screen.Concept,
         Screen.MathSolver,
         Screen.Summarizer,
-        Screen.Essay,
         Screen.Saved
     )
 
@@ -128,7 +132,17 @@ fun AppNavigation(viewModel: MainViewModel) {
                     },
                     onNavigateToSaved = {
                         navController.navigate(Screen.Saved.route)
+                    },
+                    onNavigateToStudyPlan = {
+                        navController.navigate(Screen.StudyPlan.route)
                     }
+                )
+            }
+
+            composable(Screen.StudyPlan.route) {
+                StudyPlanScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
 

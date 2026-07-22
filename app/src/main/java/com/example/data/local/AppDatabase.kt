@@ -5,9 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [SavedItem::class], version = 1, exportSchema = false)
+@Database(entities = [SavedItem::class, StudyTask::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun savedItemDao(): SavedItemDao
+    abstract fun studyTaskDao(): StudyTaskDao
 
     companion object {
         @Volatile
@@ -19,7 +20,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "nibras_education_db"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }
